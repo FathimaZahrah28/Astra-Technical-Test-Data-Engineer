@@ -1,18 +1,4 @@
-"""
-Task 2a – Data Cleaning
-Membersihkan customers_raw dan sales_raw, lalu simpan ke tabel cleaned.
-
-Isu yang ditemukan:
-  customers_raw:
-    - dob format tidak konsisten (YYYY-MM-DD, YYYY/MM/DD, DD/MM/YYYY, NULL)
-    - dob = 1900-01-01 → placeholder / invalid
-    - customer type: ada perusahaan (PT ...) di antara individu
-  sales_raw:
-    - duplikat VIN berbeda, tapi customer/model/tanggal/harga sama (suspect duplicate)
-  after_sales_raw:
-    - VIN yang tidak ada di sales_raw (beli di luar, atau data error) → di-flag
-"""
-
+]
 import logging
 import os
 import re
@@ -147,7 +133,7 @@ def clean_after_sales(engine) -> pd.DataFrame:
 
 def write_cleaned(df: pd.DataFrame, table: str, engine):
     df.to_sql(table, engine, if_exists="replace", index=False)
-    log.info("✅ Tabel '%s' ditulis: %d baris.", table, len(df))
+    log.info("Tabel '%s' ditulis: %d baris.", table, len(df))
 
 
 def main():
