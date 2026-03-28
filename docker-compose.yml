@@ -1,0 +1,53 @@
+services:
+
+  # ── MySQL ───────────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: maju_jaya_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: maju_jaya
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Python Pipeline ─────────────────────────────────────────────────────────
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maju_jaya_pipeline
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST:     db
+      DB_PORT:     "3306"
+      DB_USER:     root
+      DB_PASSWORD: password
+      DB_NAME:     maju_jaya
+      SOURCE_FOLDER:    /app/data/incoming
+      PROCESSED_FOLDER: /app/data/processed
+    volumes:
+      - ./data:/app/data
+    # Default command: jalankan cleaning + datamart
+    # Untuk ingest CSV: docker compose run pipeline python task1/ingest_customer_addresses.py
+    command: >
+      sh -c "
+        echo '⏳ Menunggu DB siap...' &&
+        sleep 5 &&
+        echo '🧹 Menjalankan data cleaning...' &&
+        python task2/clean_data.py &&
+        echo ' Selesai!'
+      "
+
+volumes:
+  db_data:
